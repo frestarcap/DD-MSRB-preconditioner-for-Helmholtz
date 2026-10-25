@@ -1,0 +1,27 @@
+% Generated from frozen selection and *_holdout.csv
+From 12 development configurations,
+we select an \(8\times8\) training grid with three \(10^{-4}\) layer
+budgets. Within the stated parameter range, it gives the fastest DD
+development mean among candidates with at least \(10\%\) storage savings
+and acceleration over shifted ILU. The model is frozen before testing
+nine independent queries fixed before the scan.
+\begin{table}[t]\centering\normalsize
+\setlength{\belowcaptionskip}{6pt}
+\caption{Independent two-material validation of the frozen selected
+configuration. Payload is in MiB; It. counts SL steps, or the baseline
+iterations.}\label{tab:reviewer-selected}
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{llrrrrr}\toprule
+Method & Layer ranks & Payload & Offline (s) & Online (s) & It. & Max. $\rho$ \\
+\midrule
+@@ROWS@@
+\bottomrule\end{tabular}\end{table}
+
+Table~\ref{tab:reviewer-selected} and
+Figure~\ref{fig:halfspace-two-parameter-results} show that DD reduces
+persistent storage by \(@@SAVING@@\%\), from \(@@GLOBAL_PAYLOAD@@\)
+to \(@@DD_PAYLOAD@@\) MiB, while maintaining comparable mean
+online time: \(@@DD_TIME@@\) s versus \(@@GLOBAL_TIME@@\) s for global.
+All nine queries reach \(10^{-10}\) after the SL steps. DD is
+\(@@SPEEDUP@@\) times faster than shifted ILU, although sparse direct
+solution remains faster at this two-dimensional size.

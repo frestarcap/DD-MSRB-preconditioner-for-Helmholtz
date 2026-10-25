@@ -1,0 +1,109 @@
+function summary = refine_dd_mechanism_reference(training_file, result_file, outdir, mu, tol)
+%REFINE_DD_MECHANISM_REFERENCE Stricter computed reference for frozen audits.
+% Does not load trained models or edit existing experiment data. The old
+% shifted-Laplacian solution is the initial guess. A smaller residual is not
+% a certified bound on solution error for this indefinite nonnormal problem.
+% Thread count is configured by the caller, normally eight HPC threads.
+    if nargin<5 || isempty(tol), tol=1e-10; end
+    assert(nargin>=4 && isscalar(mu) && isfinite(mu), 'A scalar query mu is required.');
+    assert(isscalar(tol) && isfinite(tol) && tol>0, 'Tolerance must be positive.');
+    assert(~isfolder(outdir) && ~isfile(outdir), 'Refusing to overwrite an existing refinement directory.');
+    wall_clock=tic;
+    s=load(training_file,'cfg','partition','geometry','rhs','resolved_problem_cfg');
+    saved=load(result_file,'results');
+    candidate=saved.results.candidates{1};
+    match=find(abs([candidate.tests.mu]-mu)<1e-10);
+    assert(isscalar(match), 'Expected exactly one matching saved query.');
+    q=candidate.tests(match);
+    old_reference=q.shifted.solution;
+    native=struct('global',q.global.precorrection_solution,'dd',q.dd.precorrection_solution);
+    clear saved candidate q
+    cfg=s.cfg;partition=s.partition;geometry=s.geometry;b=s.rhs;
+    problem=helmholtz_3d_problem_interface(s.resolved_problem_cfg);
+    clear s
+    assert(isequal(double(geometry.grid_size(:)),double(problem.n(:))), ...
+        'Rebuilt grid differs from saved geometry.');
+    assert(numel(b)==problem.N && numel(old_reference)==problem.N, 'Saved field/grid mismatch.');
+    nb=norm(b); assert(nb>0, 'Reference refinement requires a nonzero RHS.');
+    mass=problem.affine.mass_base+mu*problem.affine.mass_parameter_diagonal;
+    A=problem.K_pml+spdiags(mass,0,problem.N,problem.N);
+    Afun=@(v) A*v;
+    old_rho=norm(b-Afun(old_reference))/nb;
+    assert(isfinite(old_rho), 'Old computed reference has a nonfinite residual.');
+    opts=struct('mg_max_levels',cfg.mg_max_levels, ...
+        'mg_coarse_max_dofs',cfg.mg_coarse_max_dofs, ...
+        'mg_pre_sweeps',cfg.mg_pre_sweeps,'mg_post_sweeps',cfg.mg_post_sweeps, ...
+        'mg_jacobi_weight',cfg.mg_jacobi_weight,'mg_cycles_per_apply',cfg.mg_cycles_per_apply);
+    shifted=A+1i*cfg.shift_beta*spdiags(mass,0,problem.N,problem.N);
+    [M,mg_info]=build_shifted_laplacian_multigrid_preconditioner(shifted,problem.n,opts);
+    clear shifted mass
+    gmres_opts=struct('restart',40,'maxit',120,'tol',tol,'reorthogonalize',true, ...
+        'orthogonalization','cgs2','store_preconditioned_basis',false, ...
+        'fixed_linear_preconditioner',true,'verbose',true);
+    mkdir(outdir);
+    fprintf('REFERENCE_REFINE_START omega=%g mu=%.6f old_rho=%.6e target=%.3e\n', ...
+        problem.cfg.omega,mu,old_rho,tol);
+    [x,solve_info]=shifted_laplacian_gmres(Afun,M,b,old_reference,gmres_opts);
+    residual=b-Afun(x);rho=norm(residual)/nb;delta=x-old_reference;
+    summary=struct('definition_version','dd_reference_refinement_v1', ...
+        'source_training',training_file,'source_results',result_file, ...
+        'omega',problem.cfg.omega,'mu',mu,'N',problem.N,'grid_size',problem.n, ...
+        'matlab_version',version,'node',getenv('SLURMD_NODENAME'), ...
+        'job_id',getenv('SLURM_JOB_ID'),'requested_tolerance',tol, ...
+        'old_true_relative_residual',old_rho,'new_true_relative_residual',rho, ...
+        'target_met',isfinite(rho) && rho<=tol, ...
+        'old_reference_norm',norm(old_reference),'new_reference_norm',norm(x), ...
+        'reference_change_norm',norm(delta), ...
+        'reference_change_over_new_reference',norm(delta)/max(norm(x),realmin), ...
+        'iterations',solve_info.iter_count,'solve_seconds',solve_info.total_time, ...
+        'stop_reason',solve_info.stop_reason,'solver_flag',solve_info.flag, ...
+        'residual_history',solve_info.relres_hist,'mg_setup_seconds',mg_info.setup_time, ...
+        'mg_options',opts,'gmres_options',gmres_opts,'shift_beta',cfg.shift_beta);
+    summary.interpretation=struct( ...
+        'reference','Stricter computed reference; no certified solution-error bound is claimed', ...
+        'error','Computed difference x_reference - x_ROM, with Euclidean squared-norm component diagnostics', ...
+        'reference_change','Difference between old and stricter computed references; sensitivity indicator, not an error bound', ...
+        'threads','Configured externally by caller; this routine does not change computational thread limits');
+    % Save expensive numerical output before any optional diagnostic processing.
+    save(fullfile(outdir,'refined_reference.mat'),'x','delta','residual','rho','old_rho', ...
+        'mu','tol','solve_info','summary','-v7.3','-nocompression');
+    write_json(fullfile(outdir,'solver_summary.json'),summary);
+    clear M mg_info A Afun
+    summary.native_errors=struct();
+    for method_cell={'global','dd'}
+        method=method_cell{1};
+        old_error=old_reference-native.(method);new_error=x-native.(method);
+        old_norm=norm(old_error);new_norm=norm(new_error);
+        row=struct('old_error_norm',old_norm,'new_error_norm',new_norm, ...
+            'old_relative_error',old_norm/max(norm(old_reference),realmin), ...
+            'new_relative_error',new_norm/max(norm(x),realmin), ...
+            'relative_error_norm_change',(new_norm-old_norm)/max(old_norm,realmin), ...
+            'reference_change_over_old_error',norm(delta)/max(old_norm,realmin), ...
+            'reference_change_over_new_error',norm(delta)/max(new_norm,realmin));
+        row.old_components=dd_mechanism_component_metrics(old_error,problem,partition);
+        row.new_components=dd_mechanism_component_metrics(new_error,problem,partition);
+        row.spatial_region_fraction_change=row.new_components.region_fraction-row.old_components.region_fraction;
+        row.profile_band_fraction_change=row.new_components.profile_band_fraction-row.old_components.profile_band_fraction;
+        row.axial_section_fraction_change=row.new_components.axial_section_fraction-row.old_components.axial_section_fraction;
+        row.axial_fft_fraction_change=row.new_components.axial_fft_fraction-row.old_components.axial_fft_fraction;
+        row.partition_fraction_change=row.new_components.partition_fraction-row.old_components.partition_fraction;
+        summary.native_errors.(method)=row;
+        save(fullfile(outdir,[method '_refined_error.mat']),'new_error','old_error','mu','method','-v7.3','-nocompression');
+        fprintf('REFERENCE_ERROR %s old=%.6e new=%.6e change/new=%.5f\n', ...
+            method,old_norm,new_norm,row.reference_change_over_new_error);
+        clear old_error new_error
+    end
+    summary.elapsed_seconds=toc(wall_clock);
+    write_json(fullfile(outdir,'summary.json'),summary);
+    assert(summary.target_met, ...
+        'Stricter target was not met; best computed reference and diagnostics have been retained.');
+    fprintf('REFERENCE_REFINE_PASS omega=%g mu=%.6f rho=%.6e iterations=%d\n', ...
+        problem.cfg.omega,mu,rho,solve_info.iter_count);
+end
+
+function write_json(path,value)
+    assert(~isfile(path),'Refusing to overwrite existing refinement evidence.');
+    fid=fopen(path,'w');assert(fid>=0,'Could not create refinement summary.');
+    cleanup=onCleanup(@()fclose(fid));
+    fprintf(fid,'%s\n',jsonencode(value,PrettyPrint=true));
+end

@@ -1,0 +1,10 @@
+\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lrrrrrr@{}}\toprule
+& \multicolumn{2}{c}{Three common queries} & \multicolumn{2}{c}{Seven added queries} & \multicolumn{2}{c}{All ten queries} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(l){6-7}
+Method & Online (s) & SL steps & Online (s) & SL steps & Online (s) & SL steps \\
+\midrule
+Global (\(k=3\)) & 444.24 & 155.3 & 484.02 & 181.3 & 472.08 & 173.5 \\
+Global (\(k=2\)) & 420.85 & 149.3 & 458.26 & 177.0 & 447.04 & 168.7 \\
+DD (\(k=3\)) & 289.11 & 100.7 & 342.71 & 126.6 & 326.63 & 118.8 \\
+Shifted MG-GMRES & 952.18 & 349.7 & 960.76 & 359.0 & 958.19 & 356.2 \\
+\bottomrule\end{tabular*}

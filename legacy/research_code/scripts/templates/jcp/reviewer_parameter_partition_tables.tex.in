@@ -1,0 +1,10 @@
+% Generated from summary_train.csv and *_timing.csv
+\begin{table}[t]\centering\normalsize
+\setlength{\belowcaptionskip}{6pt}
+\caption{Partition sensitivity over five fixed queries.}\label{tab:reviewer-partition}
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{llrrrr}\toprule
+Partition & Layer ranks & Payload (MiB) & Saving & Time (s) & Max. $\rho_{\rm ROM}$ \\
+\midrule
+@@ROWS@@
+\bottomrule\end{tabular}\end{table}

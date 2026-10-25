@@ -1,0 +1,15 @@
+#!/bin/bash
+# Ten-query validation at omega = 48 (needs the omega = 48 models of run_omega.slurm).
+# About 1-2 h per query with eight threads; the ten queries run in sequence.
+#SBATCH --job-name=dmsrb-validation
+#SBATCH --account={{ACCOUNT}}
+#SBATCH --partition={{PARTITION}}
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=192G
+#SBATCH --time=24:00:00
+#SBATCH --output=%x_%j.out
+set -euo pipefail
+cd {{REPOSITORY}}
+{{MATLAB}} -batch "startup; build_mex; run_exp3('validation', 48);"

@@ -1,0 +1,20 @@
+#!/bin/bash
+# Train and solve Experiment 3 at one frequency.  Replace the {{...}} placeholders,
+# then: sbatch --export=OMEGA=48 run_omega.slurm
+# Measured on a 64-core node (Hygon 7285, 2.0 GHz): omega = 24: 0.5 h / 25 GB,
+# omega = 36: 1.5 h / 46 GB, omega = 48: 3.3 h / 96 GB (peak resident memory).
+# omega = 60 needs about 31 h and 110 GB with four workers: use --time=36:00:00
+# and --mem=224G.  Training resumes from its checkpoints after an interruption.
+#SBATCH --job-name=dmsrb-waveguide
+#SBATCH --account={{ACCOUNT}}
+#SBATCH --partition={{PARTITION}}
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=64
+#SBATCH --mem=192G
+#SBATCH --time=08:00:00
+#SBATCH --output=%x_%j.out
+set -euo pipefail
+export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
+cd {{REPOSITORY}}
+{{MATLAB}} -batch "startup; build_mex; run_exp3('train', ${OMEGA}); run_exp3('online', ${OMEGA});"

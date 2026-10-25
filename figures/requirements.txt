@@ -1,0 +1,7 @@
+# Versions used for the published figures; other versions may shift pixels.
+numpy==2.4.6
+pandas==3.0.3
+scipy==1.17.1
+matplotlib==3.10.9
+pillow==12.2.0
+pytest

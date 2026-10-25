@@ -1,0 +1,8 @@
+{
+  "shift_beta": 2,
+  "snapshot_restart": 40,
+  "snapshot_maxit": 120,
+  "gmres_restart": 40,
+  "gmres_maxit": 40,
+  "mg_coarse_max_dofs": 12000
+}

@@ -1,0 +1,7 @@
+method,iteration,dimension,ranks,basis_entries
+global,1,25,25,525625
+global,2,42,42,883050
+global,3,42,42,883050
+dd,1,41,[27 8 6],157856
+dd,2,71,[44 16 11],291512
+dd,3,75,[43 19 13],335688

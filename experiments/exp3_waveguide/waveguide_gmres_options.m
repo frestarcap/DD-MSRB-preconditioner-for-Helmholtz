@@ -1,0 +1,6 @@
+function opts = waveguide_gmres_options(c, tol, maxit)
+%WAVEGUIDE_GMRES_OPTIONS SL GMRES settings of Experiment 3 (fixed MG preconditioner, no stored Z).
+    opts = struct('tol', tol, 'restart', c.restart, 'maxit', maxit, 'reorthogonalize', true, ...
+        'orthogonalization', c.orthogonalization, 'store_preconditioned_basis', false, ...
+        'fixed_linear_preconditioner', true);
+end

@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the paper below."
+title: "DD-MSRB preconditioner for Helmholtz"
+type: software
+license: MIT
+authors:
+  - family-names: Ping
+    given-names: An
+    orcid: "https://orcid.org/0009-0005-8259-1071"
+  - family-names: Peng
+    given-names: Zhichao
+  - family-names: Yang
+    given-names: Pengliang
+preferred-citation:
+  type: article
+  title: "A Trajectory-Aware Domain-Decomposed Multispace Reduced Basis Preconditioner for Parameterized Helmholtz Problems"
+  authors:
+    - family-names: Ping
+      given-names: An
+    - family-names: Peng
+      given-names: Zhichao
+    - family-names: Yang
+      given-names: Pengliang
+  journal: "Journal of Computational Physics (submitted)"
+  year: 2026

@@ -9,7 +9,7 @@ the repository root contains a rewritten implementation of the same method
 | | Original code (this folder) | Rewritten code (repository root) |
 |---|---|---|
 | Readability | harder to read: research history, many study variants and options | easier to read: one package, one driver per experiment |
-| Paper data | source of Experiment 3 and Appendix A; source of the original runs of Experiments 1–2 | source of Table 1, Figure 2 (right), Figure 3 (left) and the Experiment 2 offline times; re-runs Experiments 1–2 with the same ranks, storage and SL steps (`reference_outputs/comparison_report.md`) |
+| Paper data | source of Experiment 3 and Appendix A; source of the original runs of Experiments 1–2 | source of Table 1, Figure 2 (right), Figure 3 (left) and the 2D offline times (Table 2, Experiment 2); re-runs Experiments 1–2 with the same ranks, storage and SL steps (`reference_outputs/comparison_report.md`) |
 | Experiment 3 | as run on the cluster | the same pipeline, checked against `cluster_v7/` on reduced grids (`tests/equivalence/test_waveguide.m`), not run at full scale |
 
 Contents:

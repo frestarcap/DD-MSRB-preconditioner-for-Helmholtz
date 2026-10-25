@@ -6,11 +6,15 @@ is listed here with its effect.  `reference_outputs/comparison_report.md` compar
 complete re-run of Experiments 1 and 2 with the numbers of the original runs.
 
 **Paper numbers from the rewritten code.**  Table 1, Figure 2 (right), Figure 3 (left)
-and the Experiment 2 offline times (7.17 s DD, 7.71 s global) of the paper come from the
-re-run with this code; the earlier manuscript version reported a slower SL baseline in
-Table 1 (median 0.5328 s instead of 0.4177 s, hence speedups 75.5/67.7 instead of
-59.7/53.6) and offline times of 11.58/14.46 s that included unused computations (below).
-A second re-run of Table 1 on the same machine gave speedups 57.2 and 51.4.
+and all 2D offline times of the paper (the Table 2 offline column and the Experiment 2
+offline times, 7.57 s DD and 7.60 s global) come from the re-run with this code.  The
+earlier manuscript version reported a slower SL baseline in Table 1 (median 0.5328 s
+instead of 0.4177 s, hence speedups 75.5/67.7 instead of 59.7/53.6) and offline times that
+included unused computations (below): Table 2 1.14/1.36, 3.28/2.74, 6.15/5.13 s instead of
+0.74/0.76, 2.12/1.54, 4.28/2.96 s, Experiment 2 11.58/14.46 s.  Offline times are the
+median of three complete trainings after an untimed warm-up (stage `offline`; the three
+runs differ by at most 1.5%).  A second re-run of Table 1 on the same machine gave
+speedups 57.2 and 51.4.
 
 ## Algorithms
 
@@ -48,8 +52,8 @@ The research solvers also computed, inside the timed offline stage, quantities t
 paper does not use: a time-domain (WaveHoltz) lift of every snapshot, a dense POD of
 every DD layer, a "direct" POD of all reference solutions, re-solves of every training
 sample after each layer, and, online, a 60-step unpreconditioned GMRES per query.  All
-WaveHoltz code is removed.  Offline times of the re-run are therefore lower
-(e.g. the Table 2 offline column, which the paper still reports from the original runs).
+WaveHoltz code is removed.  Offline times of the re-run are therefore lower; the paper
+now reports the 2D offline times of the rewritten code.
 
 ## Settings
 

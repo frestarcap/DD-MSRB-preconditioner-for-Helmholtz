@@ -26,8 +26,8 @@ also provides a rewritten implementation of the method.
 * **Original code** (`legacy/`): harder to read; the source of the Experiment 3 and
   Appendix A data, and of the original runs of Experiments 1 and 2.
 * **Rewritten code** (`src/`, `experiments/`): easier to read; one MATLAB package and one
-  driver per experiment.  Table 1, Figure 2 (right), Figure 3 (left) and the Experiment 2
-  offline times of the paper come from its re-run; for all other quantities of
+  driver per experiment.  Table 1, Figure 2 (right), Figure 3 (left) and the 2D offline
+  times of the paper (Table 2, Experiment 2) come from its re-run; for all other quantities of
   Experiments 1 and 2 it reproduces the ranks, storage and SL step counts of the original
   runs (`reference_outputs/comparison_report.md`).  Its Experiment 3 pipeline agrees with
   the cluster code on reduced grids but was not run at full scale.

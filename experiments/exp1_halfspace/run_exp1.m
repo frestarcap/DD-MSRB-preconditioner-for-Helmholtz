@@ -5,6 +5,8 @@ function run_exp1(stage)
 %     'main'         six methods on the 23 test queries (Table 1, Figures 2-3)
 %     'coverage'     training-set size n_s = 6, 12, 24 (Table 2)
 %     'sensitivity'  partitions at omega = 53.5 and frequency scaling (Table 3, Figure 5)
+%     'offline'      training times of the coverage models (Table 2): median of three
+%                    trainings after an untimed warm-up
 %     'export'       write results/paper/exp1 in the schema of paper_data/exp1
 %     'all'          all of the above, in order
 %     'smoke'        a small problem through the whole pipeline (about a minute)
@@ -15,7 +17,7 @@ function run_exp1(stage)
     c = exp1_config();
     if strcmp(stage, 'smoke'), smoke(c); return; end
     stages = {stage};
-    if strcmp(stage, 'all'), stages = {'train', 'main', 'coverage', 'sensitivity', 'export'}; end
+    if strcmp(stage, 'all'), stages = {'train', 'main', 'coverage', 'sensitivity', 'offline', 'export'}; end
     for s = stages
         fprintf('=== Experiment 1: %s ===\n', s{1});
         switch s{1}
@@ -23,6 +25,7 @@ function run_exp1(stage)
             case 'main', main_study(c);
             case 'coverage', coverage_study(c);
             case 'sensitivity', sensitivity_study(c);
+            case 'offline', offline_study(c);
             case 'export', export_paper(c);
             otherwise, error('Unknown stage %s.', s{1});
         end
@@ -177,8 +180,13 @@ function export_paper(c)
             name = coverage_name(style{1}, n, c);
             m = load(model_file(name), 's', 'info');
             r = t(t.method == name, :);
+            offline = m.info.total_s;
+            if isfile(result_file('offline_timings.csv'))
+                o = readtable(result_file('offline_timings.csv'), 'TextType', 'string');
+                offline = o.offline_s(o.n_s == n & o.method == style{1});
+            end
             rows = [rows; table(n, string(style{1}), string(mat2str(m.s.ranks)), m.s.payload_MiB, ...
-                m.info.total_s, mean(r.total_s), max(r.rho_rom), max(r.true_residual), max(r.repeat), ...
+                offline, mean(r.total_s), max(r.rho_rom), max(r.true_residual), max(r.repeat), ...
                 'VariableNames', {'n_s', 'method', 'ranks', 'payload_MiB', 'offline_s', 'online_mean_s', ...
                 'max_rho_rom', 'max_true_residual', 'repetitions'})]; %#ok<AGROW>
         end
@@ -221,6 +229,40 @@ function export_paper(c)
     writetable(sortrows(storage, {'method', 'omega'}), fullfile(out, 'frequency_storage.csv'));
     writetable(timings, fullfile(out, 'frequency_timings.csv'));
     fprintf('exported %s\n', out);
+end
+
+%% Offline training times (Table 2)
+function offline_study(c)
+    P = exp1_problem(1);
+    F = dmsrb.halfspace.family(P);
+    rows = table();
+    for n = c.coverage_counts
+        train = linspace(c.train(1), c.train(end), n);
+        for style = {'global', 'dd'}
+            fit = @() dmsrb.train(F, train, c.eta, partition_for(P, style{1}));   % partition timed too
+            seconds = offline_seconds(fit, 3);
+            rows = [rows; table(n, string(style{1}), seconds, median(seconds), ...
+                'VariableNames', {'n_s', 'method', 'runs_s', 'offline_s'})]; %#ok<AGROW>
+            fprintf('n_s = %d %s: offline %.2f s (median of %s)\n', n, style{1}, median(seconds), mat2str(seconds, 4));
+        end
+    end
+    writetable(rows, result_file('offline_timings.csv'));
+end
+
+function part = partition_for(P, style)
+    part = [];
+    if strcmp(style, 'dd'), part = dmsrb.halfspace.partition(P, 'material_depth'); end
+end
+
+function seconds = offline_seconds(fit, repetitions)
+% Wall-clock time of a complete training (partition included), after one warm-up.
+    fit();
+    seconds = zeros(1, repetitions);
+    for r = 1:repetitions
+        timer = tic;
+        fit();
+        seconds(r) = toc(timer);
+    end
 end
 
 %% Shared helpers

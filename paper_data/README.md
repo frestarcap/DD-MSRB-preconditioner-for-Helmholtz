@@ -10,8 +10,9 @@ ROM-preconditioned iterations, before any shifted-Laplacian (SL) step. Method ke
 `global` (global MSRB), `dd` (DD-MSRB), `nt` (NT-ROM), `ss` (SS-ROM),
 `shifted` (SL baseline, k = 0), `direct` (sparse direct solver), `plain_gmres`.
 `MANIFEST.json` lists the SHA-256 of every file.  `exp1/online_timings.csv`,
-`exp1/residual_histories_query10.csv` and the offline times in `exp2/storage.csv` come
-from the re-run with the rewritten code (2026-10-24), as in the paper; all other files
+`exp1/residual_histories_query10.csv`, the offline column of `exp1/training_coverage.csv`
+and the offline times in `exp2/storage.csv` come from the re-run with the rewritten code
+(2026-10-24/25; offline: median of three trainings after a warm-up), as in the paper; all other files
 come from the runs of the original code (`legacy/`).
 
 ## exp1 — half-space

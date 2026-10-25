@@ -20,6 +20,7 @@ run_exp1('train')        % 17 models, ~15 min (omega = 214: N = 570,025)
 run_exp1('main')         % ~5 min
 run_exp1('coverage')     % ~2 min
 run_exp1('sensitivity')  % ~40 min (omega = 214 dominates)
+run_exp1('offline')      % ~1 min: offline column of Table 2 (median of three trainings)
 run_exp1('export')
 ```
 
@@ -28,7 +29,7 @@ run_exp1('export')
 | Fig. 1 (fields, partition) | `main`, `sensitivity` | `field_omega53.5.mat`, `field_omega214.mat` | `figures/exp1.py: fields` |
 | Fig. 2 (spectra, residual histories) | `train`, `main` | `field_omega53.5.mat`, `residual_histories_query10.csv` | `fields`, `residuals` |
 | Table 1, Fig. 3 (online cost, storage) | `main`, `train` | `online_timings.csv`, `storage.csv` | `table_cost`, `cost` |
-| Table 2 (training coverage) | `coverage` | `training_coverage.csv` | `table_coverage` |
+| Table 2 (training coverage) | `coverage`, `offline` | `training_coverage.csv` | `table_coverage` |
 | Table 3, partition figure | `sensitivity` | `partitions.csv` | `table_partitions` |
 | Fig. 5 (frequency study) | `sensitivity` | `frequency_storage.csv`, `frequency_timings.csv` | `frequency` |
 
@@ -37,6 +38,7 @@ run_exp1('export')
 ```matlab
 run_exp2('train')   % ~1 min
 run_exp2('time')    % ~3 min
+run_exp2('offline') % ~1 min: offline times (median of three trainings)
 run_exp2('export')
 ```
 
@@ -44,7 +46,7 @@ run_exp2('export')
 |---|---|---|
 | Geometry/partition and field figure | `field.mat` | `figures/exp2.py: field_and_partition` |
 | Spectra and residual histories | `tail_spectra.csv`, `rank_storage.csv`, `residual_histories_query1.csv` | `spectra`, `residuals` |
-| Cost table, time and storage panels | `online_timings.csv`, `storage.csv` | `table_cost`, `cost` |
+| Cost table, time and storage panels, offline times | `online_timings.csv`, `storage.csv` | `table_cost`, `cost` |
 
 The 96 training and 22 test aspect ratios are frozen in `exp2_params.json`
 (`dmsrb.ecc.admissible` confirms that every geometry has an unambiguous ghost stencil).

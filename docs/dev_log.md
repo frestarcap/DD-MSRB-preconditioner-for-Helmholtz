@@ -78,8 +78,11 @@ runs only from an exported copy.
   only account-specific strings (cluster user paths, partition, SSH alias, Overleaf URLs)
   were replaced.  `legacy/README.md` gives the original-code commands for Experiment 3 and
   Appendix A.
-- The manuscript now takes Table 1, Figure 2 (right), Figure 3 (left) and the Experiment 2
-  offline times from the re-run with this code; `paper_data` and `tests/reference` follow.
+- The manuscript now takes Table 1, Figure 2 (right), Figure 3 (left) and all 2D offline
+  times from the re-run with this code; `paper_data` and `tests/reference` follow.
+- New `offline` stages in `run_exp1` and `run_exp2`: complete trainings (DD partition
+  included), median of three after one untimed warm-up, one thread.  Table 2 offline
+  0.74/0.76, 2.12/1.54, 4.28/2.96 s; Experiment 2 global/DD 7.60/7.57 s.
   A second quiet re-run of Table 1 reproduced the per-query pattern (the five queries with
   c_right < 0.83 have a slower SL baseline in both runs) and gave speedups within 4%.
 - The comparison report compares the re-run with the values of the original runs.

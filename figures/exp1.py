@@ -71,7 +71,8 @@ def residuals(data, out):
     ax.set(xlabel='ROM steps + SL steps', ylabel='Relative residual', ylim=(1e-15, 2))
     ax.set_xlim(-.6, 40)
     ax.set_xticks(np.arange(0, 41, 10))
-    ax.legend(fontsize=7, loc='upper right', framealpha=1, handlelength=1.4)
+    ax.legend(fontsize=7, loc='upper right', bbox_to_anchor=(1, .9),
+              framealpha=1, handlelength=1.4)
     ax.grid(alpha=.2)
     save(fig, out, 'halfspace_residuals')
 

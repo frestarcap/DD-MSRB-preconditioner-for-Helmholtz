@@ -11,9 +11,14 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.colors import SymLogNorm
-from matplotlib.patches import Ellipse, Rectangle
+from matplotlib.colors import ListedColormap, SymLogNorm
+from matplotlib.patches import Ellipse
 from matplotlib.ticker import MaxNLocator
+
+# Solution panels share the manuscript's lighter symmetric-log palette.
+FIELD_CMAP = ListedColormap(plt.get_cmap('RdBu_r')(np.linspace(.15, .85, 256)))
+FIELD_TICKS = [-.5, -.1, -.01, 0, .01, .1, .5]
+FIELD_LABELS = ['−0.5', '−0.1', '−0.01', '0', '0.01', '0.1', '0.5']
 
 # Style of the single-panel layout used by most figures.
 PANEL_RC = {'font.family': 'serif', 'font.size': 10, 'pdf.fonttype': 42,
@@ -90,7 +95,7 @@ def field_axes():
 
 
 def real_field(u, x, y, out, stem, source_xy=None, obstacle_ratio=None):
-    """Normalized real part on a symmetric-log scale over the PML-extended grid."""
+    """Normalized real part on a symmetric-log scale in the physical domain."""
     if obstacle_ratio is not None:
         X, Y = np.meshgrid(x, y)
         a, b = .12 * np.sqrt(obstacle_ratio), .12 / np.sqrt(obstacle_ratio)
@@ -99,9 +104,10 @@ def real_field(u, x, y, out, stem, source_xy=None, obstacle_ratio=None):
     limit = np.max(np.abs(u.real))
     fig, ax, cax = field_axes()
     im = ax.imshow(u.real, origin='lower', extent=[x[0], x[-1], y[0], y[-1]],
-                   interpolation='nearest', rasterized=True, cmap='RdBu_r',
+                   interpolation='nearest', rasterized=True, cmap=FIELD_CMAP,
                    norm=SymLogNorm(linthresh=.01, vmin=-limit, vmax=limit))
-    ax.add_patch(Rectangle((0, 0), 1, 1, fill=False, ec='.3', lw=.8))
+    ax.set(xlim=(0, 1), ylim=(0, 1))
+    ax.spines[['top', 'right']].set_visible(True)
     if obstacle_ratio is None:
         ax.plot([.5, .5], [0, 1], '--', color='.3', lw=.7)
     else:
@@ -110,8 +116,7 @@ def real_field(u, x, y, out, stem, source_xy=None, obstacle_ratio=None):
         ax.scatter(*source_xy, s=13, c='white', edgecolors='black', linewidths=.6)
     ax.set(xlabel='$x$', ylabel='$y$', xticks=[0, .5, 1], yticks=[0, .5, 1])
     cb = fig.colorbar(im, cax=cax)
-    cb.set_ticks([-.5, -.1, -.01, 0, .01, .1, .5],
-                 labels=['−0.5', '−0.1', '−0.01', '0', '0.01', '0.1', '0.5'])
+    cb.set_ticks(FIELD_TICKS, labels=FIELD_LABELS)
     cb.ax.tick_params(labelsize=8)
     return save(fig, out, stem + '_real')
 

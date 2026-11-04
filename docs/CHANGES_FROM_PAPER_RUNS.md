@@ -5,7 +5,7 @@ original code (`legacy/`) differed from that statement, or did extra work, the d
 is listed here with its effect.  `reference_outputs/comparison_report.md` compares a
 complete re-run of Experiments 1 and 2 with the numbers of the original runs.
 
-**Paper numbers from the rewritten code.**  Table 1, Figure 2 (right), Figure 3 (left)
+**Paper numbers from the rewritten code.**  Table 1, Figure 3 (left)
 and all 2D offline times of the paper (the Table 2 offline column and the Experiment 2
 offline times, 7.57 s DD and 7.60 s global) come from the re-run with this code.  The
 earlier manuscript version reported a slower SL baseline in Table 1 (median 0.5328 s
@@ -15,6 +15,12 @@ included unused computations (below): Table 2 1.14/1.36, 3.28/2.74, 6.15/5.13 s 
 median of three complete trainings after an untimed warm-up (stage `offline`; the three
 runs differ by at most 1.5%).  A second re-run of Table 1 on the same machine gave
 speedups 57.2 and 51.4.
+
+**Figure synchronization (2026-11-04).** The solution panels now use the physical
+domain and the current manuscript colormap. Figure 2 (right) follows the
+2026-10-22 original-code residual histories used by the current manuscript
+renderer; the rewritten-code histories remain in `reference_outputs/exp1`.
+Its legend is lowered to avoid covering the plain GMRES curve.
 
 ## Algorithms
 

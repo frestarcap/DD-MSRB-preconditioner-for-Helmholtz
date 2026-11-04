@@ -10,10 +10,14 @@ ROM-preconditioned iterations, before any shifted-Laplacian (SL) step. Method ke
 `global` (global MSRB), `dd` (DD-MSRB), `nt` (NT-ROM), `ss` (SS-ROM),
 `shifted` (SL baseline, k = 0), `direct` (sparse direct solver), `plain_gmres`.
 `MANIFEST.json` lists the SHA-256 of every file.  `exp1/online_timings.csv`,
-`exp1/residual_histories_query10.csv`, the offline column of `exp1/training_coverage.csv`
+the offline column of `exp1/training_coverage.csv`
 and the offline times in `exp2/storage.csv` come from the re-run with the rewritten code
 (2026-10-24/25; offline: median of three trainings after a warm-up), as in the paper; all other files
 come from the runs of the original code (`legacy/`).
+
+The half-space residual panel follows the 2026-10-22 original-code histories
+used by the current manuscript renderer. The rewritten-code histories remain
+in `reference_outputs/exp1/residual_histories_query10.csv`.
 
 ## exp1 — half-space
 
@@ -46,7 +50,7 @@ come from the runs of the original code (`legacy/`).
 |---|---|---|
 | `frequency_queries.csv` | ω ∈ {24, 36, 48, 60}, three common queries μ ∈ {0.237, 0.317, 0.483}: online time, setup/solve/ROM time, SL steps, ρ_ROM, true residual | frequency table and time panel |
 | `residual_histories_omega48_mu0.317.csv` | ROM + SL residual histories | residual panel |
-| `field_omega48_mu0.317.mat` | real part of the DD-MSRB solution on z = 0.5 | field panel |
+| `field_omega48_mu0.317.mat` | real part and modulus (`amplitude`) of the DD-MSRB solution on z = 0.5; the plot normalizes by the maximum modulus | field panel |
 | `validation_omega48.csv` | ten queries at ω = 48 (three common queries with three repetitions, seven added with one): mean/SD time, SL steps, payload, for global (k = 3), global (k = 2), DD (k = 3), SL baseline | validation table and panel |
 | `storage_omega48.csv`, `iteration_storage_omega48.csv` | basis, payload, object size; basis per iteration | storage panel |
 | `frequency_storage.csv` | payload per ω | frequency storage panel |

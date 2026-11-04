@@ -93,8 +93,9 @@ function save_slice(P, c, u)
     U = reshape(u, P.n);
     mid = ceil(P.n(3) / 2);
     x = P.coordinates{1}; y = P.coordinates{2}; real_part = real(U(:, :, mid));
+    amplitude = abs(U(:, :, mid)); %#ok<NASGU>
     mu = c.representative; z = P.coordinates{3}(mid); %#ok<NASGU>
-    save(result_file(c, 'field.mat'), 'x', 'y', 'real_part', 'mu', 'z', '-v7');
+    save(result_file(c, 'field.mat'), 'x', 'y', 'real_part', 'amplitude', 'mu', 'z', '-v7');
 end
 
 function validation_study(c)
@@ -160,7 +161,10 @@ function export_paper()
     c = exp3_config(48);
     copyfile(result_file(c, 'histories.csv'), fullfile(out, 'residual_histories_omega48_mu0.317.csv'));
     f = load(result_file(c, 'field.mat'));
-    field = struct('x', f.x, 'y', f.y, 'real', f.real_part, 'mu', f.mu, 'z', f.z);
+    assert(isfield(f, 'amplitude'), ...
+        'Re-run run_exp3(''online'', 48) to save the solution modulus for the field panel.');
+    field = struct('x', f.x, 'y', f.y, 'real', f.real_part, ...
+        'amplitude', f.amplitude, 'mu', f.mu, 'z', f.z);
     save(fullfile(out, 'field_omega48_mu0.317.mat'), '-struct', 'field', '-v7');
     if isfile(result_file(c, 'validation.csv'))
         v = readtable(result_file(c, 'validation.csv'), 'TextType', 'string');

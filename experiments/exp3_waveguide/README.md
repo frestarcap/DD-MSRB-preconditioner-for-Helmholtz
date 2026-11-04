@@ -1,7 +1,7 @@
 # Experiment 3 — 3D Gaussian waveguide
 
-The waveguide problems are large: at ω = 48 the PML-extended grid has 287 × 95 × 95 =
-5,543,003 unknowns.  The paper ran them on single nodes of a Slurm cluster (64 cores,
+The waveguide problems are large: at ω = 48 the physical grid has 287 × 95 × 95
+unknowns. Adding 18 PML cells per face gives 323 × 131 × 131 = 5,543,003 unknowns.  The paper ran them on single nodes of a Slurm cluster (64 cores,
 Hygon 7285 at 2.0 GHz) with MATLAB R2024a.  On a workstation, `run_exp3('verify')`
 trains and solves the same pipeline at ω = 6 (N = 11,849) in a few minutes.
 

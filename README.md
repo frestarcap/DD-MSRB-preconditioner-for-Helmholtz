@@ -20,19 +20,86 @@ global snapshot-error budget; the online reduced system keeps all subdomain coup
 
 The first author continues to use the original research code in other ongoing work, so
 **Experiment 3 and Appendix A of the paper were computed with the original code**, which
-is included unchanged in [`legacy/`](legacy/README.md).  For readability, this repository
+has its numerical implementation preserved in [`legacy/`](legacy/README.md).  For readability, this repository
 also provides a rewritten implementation of the method.
 
 * **Original code** (`legacy/`): harder to read; the source of the Experiment 3 and
   Appendix A data, and of the original runs of Experiments 1 and 2.
 * **Rewritten code** (`src/`, `experiments/`): easier to read; one MATLAB package and one
-  driver per experiment.  Table 1, Figure 2 (right), Figure 3 (left) and the 2D offline
+  driver per experiment.  Table 1, Figure 3 (left) and the 2D offline
   times of the paper (Table 2, Experiment 2) come from its re-run; for all other quantities of
   Experiments 1 and 2 it reproduces the ranks, storage and SL step counts of the original
   runs (`reference_outputs/comparison_report.md`).  Its Experiment 3 pipeline agrees with
   the cluster code on reduced grids but was not run at full scale.
 
+## Setup
+
+Use MATLAB for the solvers and Python 3.11+ for the figure scripts (the reference
+figures were checked with Python 3.12). The original cluster runs used MATLAB
+R2024a. Parallel Computing Toolbox enables concurrent 3D training; a C compiler
+is needed only for the optional MEX acceleration. Install Poppler (`pdftoppm`)
+to run the PDF image-comparison tests.
+
+From the repository root, set up the Python environment:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r figures/requirements.txt
+```
+
+Start MATLAB in the repository root and run `startup` to add the solver and
+experiment folders to the MATLAB path.
+
 ## Reproduction commands
+
+To redraw the current paper from the included numerical data, without running
+any solver:
+
+```bash
+python figures/make_all.py
+```
+
+This writes the 25 PDF panels and six table bodies to `build/`. In MATLAB, run
+`startup; waveguide_geometry();` for the two 3D geometry PNGs. Reference images
+are also included in `tests/reference/figures/`.
+
+To recompute Experiments 1 and 2 with the rewritten implementation:
+
+```matlab
+startup;
+run_exp1('all');  % Half-space: training, studies, timing and export
+run_exp2('all');  % Elliptic obstacle: training, timing and export
+```
+
+For Experiment 3, submit the templates in
+[`experiments/exp3_waveguide/slurm/`](experiments/exp3_waveguide/slurm/) after
+filling in your cluster settings. The MATLAB sequence below runs on allocated
+compute nodes; the full-size cases need the resources listed in the
+[3D guide](experiments/exp3_waveguide/README.md):
+
+```matlab
+startup;
+for w = [24, 36, 48, 60]
+    run_exp3('train', w);
+    run_exp3('online', w);
+end
+run_exp3('validation', 48);
+run_exp3('export');
+```
+
+`run_exp3('verify')` exercises the pipeline at omega = 6 on a workstation.
+The paper's full-size 3D results were produced by the original implementation;
+its reproduction commands are in [`legacy/README.md`](legacy/README.md).
+
+For Appendix A, after Experiment 3 training, run on allocated compute nodes:
+
+```matlab
+for w = [24, 36, 48, 60]
+    run_appA('probe', w);
+end
+run_appA('export');
+```
 
 | Experiment | Rewritten code (MATLAB, after `startup` in the repository root) | Original code |
 |---|---|---|
@@ -46,7 +113,7 @@ After a re-run with the rewritten code:
 
 ```bash
 python figures/make_all.py --data results/paper --out build/rerun   # the paper figures from your run
-python tools/compare_to_paper.py --paper <paper values>             # comparison report
+python tools/compare_to_paper.py --out build/comparison_report.md # compare your 2D run with paper_data/
 ```
 
 `docs/REPRODUCING.md` lists, for every table and figure, the stage that computes it, the
@@ -80,7 +147,7 @@ docs/                    reproduction guide, method notes, differences to the or
 ## Tests
 
 ```bash
-matlab -batch "startup; runtests('tests/unit'); runtests('tests/smoke')"
+matlab -batch "startup; assertSuccess(runtests('tests/unit')); assertSuccess(runtests('tests/smoke'));"
 python -m pytest tests/python          # figures and tables reproduce the published ones
 ```
 

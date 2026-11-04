@@ -85,7 +85,8 @@ def residual(ax, problem, query):
     xmax = 40 if problem == 'halfspace' else 25
     ax.set_xlim(-.6, xmax)
     ax.set_xticks(np.arange(0, xmax + 1, 10 if problem == 'halfspace' else 5))
-    ax.legend(fontsize=7, loc='upper right', framealpha=1, handlelength=1.4)
+    ax.legend(fontsize=7, loc='upper right', bbox_to_anchor=(1, .9 if problem == 'halfspace' else 1),
+              framealpha=1, handlelength=1.4)
     ax.grid(alpha=.2)
 
 

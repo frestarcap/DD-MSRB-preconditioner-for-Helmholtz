@@ -33,6 +33,10 @@ WAVEGUIDE_VALIDATION = 'outputs/jcp_revision_experiments_20260914/cloud/analysis
 STORAGE_AUDIT = []
 COLORS = {'global': '#BF3030', 'dd': '#23794C', 'shifted': '#667085', 'direct': '#3768A0'}
 NAMES = {'global': 'Global MSRB', 'dd': 'DD-MSRB', 'shifted': 'Shifted ILU-GMRES', 'direct': 'Sparse direct'}
+# Solution panels share the manuscript's lighter symmetric-log palette.
+FIELD_CMAP = ListedColormap(plt.get_cmap('RdBu_r')(np.linspace(.15, .85, 256)))
+FIELD_TICKS = [-.5, -.1, -.01, 0, .01, .1, .5]
+FIELD_LABELS = ['−0.5', '−0.1', '−0.01', '0', '0.01', '0.1', '0.5']
 plt.rcParams.update({'font.family': 'serif', 'font.size': 10, 'pdf.fonttype': 42,
                      'axes.spines.top': False, 'axes.spines.right': False,
                      'axes.linewidth': .7, 'legend.fontsize': 8})
@@ -138,24 +142,26 @@ def field_axes():
     return fig, ax, cax
 
 
-def fields(u, x, y, stem, source_xy=None, obstacle_ratio=None):
+def fields(u, x, y, stem, source_xy=None, obstacle_ratio=None, parts=('real', 'magnitude')):
     if obstacle_ratio is not None:
         X, Y = np.meshgrid(x, y)
         a, b = .12*np.sqrt(obstacle_ratio), .12/np.sqrt(obstacle_ratio)
         u = np.ma.masked_where(((X-.5)/a)**2+((Y-.5)/b)**2 < 1, u)
     u = u / np.max(np.abs(u))
     limit = np.max(np.abs(u.real))
-    for part in ['real', 'magnitude']:
+    for part in parts:
         fig, ax, cax = field_axes()
         if part == 'real':
             values = u.real
-            options = dict(cmap='RdBu_r', norm=SymLogNorm(linthresh=.01, vmin=-limit, vmax=limit))
+            options = dict(cmap=FIELD_CMAP, norm=SymLogNorm(linthresh=.01, vmin=-limit, vmax=limit))
         else:
             values = np.log10(np.maximum(np.abs(u), 1e-6))
             options = dict(cmap='magma', vmin=-6, vmax=0)
         im = ax.imshow(values, origin='lower', extent=[x[0], x[-1], y[0], y[-1]],
                        interpolation='nearest', rasterized=True, **options)
-        ax.add_patch(Rectangle((0, 0), 1, 1, fill=False, ec='.3' if part == 'real' else 'limegreen', lw=.8))
+        # Solutions are shown on the physical domain only; the partition panels show the PML.
+        ax.set(xlim=(0, 1), ylim=(0, 1))
+        ax.spines[['top', 'right']].set_visible(True)
         if obstacle_ratio is None:
             ax.plot([.5, .5], [0, 1], '--', color='.3' if part == 'real' else 'white', lw=.7)
         else:
@@ -165,7 +171,7 @@ def fields(u, x, y, stem, source_xy=None, obstacle_ratio=None):
         ax.set(xlabel='$x$', ylabel='$y$', xticks=[0, .5, 1], yticks=[0, .5, 1])
         cb = fig.colorbar(im, cax=cax)
         if part == 'real':
-            cb.set_ticks([-.5, -.1, -.01, 0, .01, .1, .5], labels=['−0.5', '−0.1', '−0.01', '0', '0.01', '0.1', '0.5'])
+            cb.set_ticks(FIELD_TICKS, labels=FIELD_LABELS)
         else:
             cb.set_ticks(np.arange(-6, 1))
         cb.ax.tick_params(labelsize=8)
@@ -269,6 +275,40 @@ def ecc():
     storage_panel(*totals, ['Basis','Payload','Object'], 'ecc_storage_total')
 
 
+def waveguide_field(report):
+    s = report['field_slice']; v = np.asarray(s['real'])
+    assert v.shape == (len(s['x']), len(s['y'])) and s['mu'] == .317 and s['z'] == .5
+    # Normalized like the 2D panels: real part over the maximum modulus.
+    v = v / np.max(s['amplitude'])
+    limit = np.max(np.abs(v))
+    norm = SymLogNorm(linthresh=.01, vmin=-limit, vmax=limit)
+    xx, yy = np.meshgrid(s['x'], s['y'], indexing='ij')
+    # PML faces are transparent, so the slice shows the physical domain and the axes keep their extent.
+    # Each face takes the color of its lower corner, so faces starting at x=3 or y=1 lie in the PML.
+    h = s['x'][1] - s['x'][0]
+    colors = FIELD_CMAP(norm(v))
+    colors[(xx < -h/2) | (xx > 3 - h/2) | (yy < -h/2) | (yy > 1 - h/2), 3] = 0
+    fig = plt.figure(figsize=(7.2, 2.8))
+    ax = fig.add_axes([-.04, .08, .90, .86], projection='3d', computed_zorder=False)
+    ax.plot_surface(xx, yy, np.full_like(xx, .5), facecolors=colors,
+                    rstride=1, cstride=1, shade=False, antialiased=False, rasterized=True, zorder=2, clip_on=False)
+    for z in [0, 1]:
+        ax.plot([0, 3, 3, 0, 0], [0, 0, 1, 1, 0], [z]*5, color='.4', lw=.65, zorder=3, clip_on=False)
+    for x0 in [0, 3]:
+        for y0 in [0, 1]: ax.plot([x0]*2, [y0]*2, [0, 1], color='.4', lw=.65, zorder=3, clip_on=False)
+    ax.scatter([.2], [.5], [.5], marker='*', s=35, color='black', depthshade=False, zorder=4)
+    ax.set(xlabel='$x$', ylabel='$y$', zlabel='$z$', zlim=(0, 1), xticks=[0, 1, 2, 3], yticks=[0, 1], zticks=[0, .5, 1])
+    ax.set_box_aspect((3.35, 1.35, 1), zoom=1.65); ax.view_init(elev=22, azim=-75)
+    ax.tick_params(pad=0, labelsize=9)
+    ax.xaxis.labelpad=0; ax.yaxis.labelpad=0; ax.zaxis.labelpad=0
+    ax.grid(False)
+    for axis in [ax.xaxis, ax.yaxis, ax.zaxis]: axis.pane.fill=False; axis.pane.set_edgecolor('white')
+    cb = fig.colorbar(plt.cm.ScalarMappable(norm=norm, cmap=FIELD_CMAP), cax=fig.add_axes([.87, .20, .018, .60]))
+    cb.set_ticks(FIELD_TICKS, labels=FIELD_LABELS)
+    cb.ax.tick_params(labelsize=8)
+    save(fig, f'waveguide_field_{int(report["omega"])}')
+
+
 def waveguide():
     reports = []
     for omega in [24, 36, 48, 60]:
@@ -278,30 +318,8 @@ def waveguide():
         reports.append(d)
     d = reports[2]
     q = next(q for q in d['tests'] if q['mu'] == .317)
-    norm = SymLogNorm(linthresh=.02, vmin=-1, vmax=1)
-    cmap = plt.get_cmap('RdBu_r')
     for report in reports:
-        s = report['field_slice']; v = np.asarray(s['real'])
-        assert v.shape == (len(s['x']), len(s['y'])) and s['mu'] == .317 and s['z'] == .5
-        xx, yy = np.meshgrid(s['x'], s['y'], indexing='ij')
-        fig = plt.figure(figsize=(7.2, 2.8))
-        ax = fig.add_axes([-.04, .08, .90, .86], projection='3d', computed_zorder=False)
-        ax.plot_surface(xx, yy, np.full_like(xx, .5), facecolors=cmap(norm(v/np.max(abs(v)))),
-                        rstride=1, cstride=1, shade=False, antialiased=False, rasterized=True, zorder=2, clip_on=False)
-        for z in [0, 1]:
-            ax.plot([0, 3, 3, 0, 0], [0, 0, 1, 1, 0], [z]*5, color='.4', lw=.65, zorder=3, clip_on=False)
-        for x0 in [0, 3]:
-            for y0 in [0, 1]: ax.plot([x0]*2, [y0]*2, [0, 1], color='.4', lw=.65, zorder=3, clip_on=False)
-        ax.scatter([.2], [.5], [.5], marker='*', s=35, color='black', depthshade=False, zorder=4)
-        ax.set(xlabel='$x$', ylabel='$y$', zlabel='$z$', zlim=(0, 1), xticks=[0, 1, 2, 3], yticks=[0, 1], zticks=[0, .5, 1])
-        ax.set_box_aspect((3.35, 1.35, 1), zoom=1.65); ax.view_init(elev=22, azim=-75)
-        ax.tick_params(pad=0, labelsize=9)
-        ax.xaxis.labelpad=0; ax.yaxis.labelpad=0; ax.zaxis.labelpad=0
-        ax.grid(False)
-        for axis in [ax.xaxis, ax.yaxis, ax.zaxis]: axis.pane.fill=False; axis.pane.set_edgecolor('white')
-        cb = fig.colorbar(plt.cm.ScalarMappable(norm=norm, cmap=cmap), cax=fig.add_axes([.87, .20, .018, .60]), ticks=[-1, -.1, 0, .1, 1])
-        cb.ax.tick_params(labelsize=8)
-        save(fig, f'waveguide_field_{int(report["omega"])}')
+        waveguide_field(report)
     # ROM steps (from the zero initial guess) followed by SL steps, as in the 2D panels.
     # Steps 0-20 keep full scale; later steps are compressed so the whole history fits.
     histories = {}

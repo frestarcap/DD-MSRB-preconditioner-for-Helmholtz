@@ -12,7 +12,8 @@ from matplotlib.colors import SymLogNorm
 from matplotlib.ticker import NullLocator
 from scipy.io import loadmat
 
-from style import COLORS, NAMES, chart, panel_style, save, storage_panel
+from style import (COLORS, FIELD_CMAP, FIELD_LABELS, FIELD_TICKS, NAMES, chart,
+                   panel_style, save, storage_panel)
 
 OMEGAS = [24, 36, 48, 60]
 SHIFTED = 'Shifted MG-GMRES'
@@ -29,12 +30,20 @@ def field(data, out):
     s = loadmat(data / 'field_omega48_mu0.317.mat')
     x, y, v = s['x'].ravel(), s['y'].ravel(), s['real']
     assert v.shape == (len(x), len(y))
-    norm = SymLogNorm(linthresh=.02, vmin=-1, vmax=1)
-    cmap = plt.get_cmap('RdBu_r')
+    # Normalize by the maximum modulus, as in the 2D solution panels.
+    amplitude = s['amplitude']
+    assert amplitude.shape == v.shape and np.max(amplitude) > 0
+    v = v / np.max(amplitude)
+    limit = np.max(np.abs(v))
+    norm = SymLogNorm(linthresh=.01, vmin=-limit, vmax=limit)
     xx, yy = np.meshgrid(x, y, indexing='ij')
+    colors = FIELD_CMAP(norm(v))
+    # Keep the axes extent but hide faces outside the physical domain.
+    h = x[1] - x[0]
+    colors[(xx < -h/2) | (xx > 3 - h/2) | (yy < -h/2) | (yy > 1 - h/2), 3] = 0
     fig = plt.figure(figsize=(7.2, 2.8))
     ax = fig.add_axes([-.04, .08, .90, .86], projection='3d', computed_zorder=False)
-    ax.plot_surface(xx, yy, np.full_like(xx, .5), facecolors=cmap(norm(v / np.max(abs(v)))),
+    ax.plot_surface(xx, yy, np.full_like(xx, .5), facecolors=colors,
                     rstride=1, cstride=1, shade=False, antialiased=False, rasterized=True,
                     zorder=2, clip_on=False)
     for z in [0, 1]:
@@ -53,8 +62,9 @@ def field(data, out):
     for axis in [ax.xaxis, ax.yaxis, ax.zaxis]:
         axis.pane.fill = False
         axis.pane.set_edgecolor('white')
-    cb = fig.colorbar(plt.cm.ScalarMappable(norm=norm, cmap=cmap), cax=fig.add_axes([.87, .20, .018, .60]),
-                      ticks=[-1, -.1, 0, .1, 1])
+    cb = fig.colorbar(plt.cm.ScalarMappable(norm=norm, cmap=FIELD_CMAP),
+                      cax=fig.add_axes([.87, .20, .018, .60]))
+    cb.set_ticks(FIELD_TICKS, labels=FIELD_LABELS)
     cb.ax.tick_params(labelsize=8)
     save(fig, out, 'waveguide_field_48')
 

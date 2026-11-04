@@ -2,14 +2,14 @@
 
 The first author continues to use the original research code in other ongoing work.
 For this reason, **Experiment 3 (the 3D Gaussian waveguide) and Appendix A of the paper
-were computed with this original code**, and it is kept here unchanged.  For readability,
+were computed with this original code**, and its numerical implementation is preserved here.  For readability,
 the repository root contains a rewritten implementation of the same method
 (`src/`, `experiments/`).
 
 | | Original code (this folder) | Rewritten code (repository root) |
 |---|---|---|
 | Readability | harder to read: research history, many study variants and options | easier to read: one package, one driver per experiment |
-| Paper data | source of Experiment 3 and Appendix A; source of the original runs of Experiments 1–2 | source of Table 1, Figure 2 (right), Figure 3 (left) and the 2D offline times (Table 2, Experiment 2); re-runs Experiments 1–2 with the same ranks, storage and SL steps (`reference_outputs/comparison_report.md`) |
+| Paper data | source of Experiment 3 and Appendix A; source of the original runs of Experiments 1–2 | source of Table 1, Figure 3 (left) and the 2D offline times (Table 2, Experiment 2); re-runs Experiments 1–2 with the same ranks, storage and SL steps (`reference_outputs/comparison_report.md`) |
 | Experiment 3 | as run on the cluster | the same pipeline, checked against `cluster_v7/` on reduced grids (`tests/equivalence/test_waveguide.m`), not run at full scale |
 
 Contents:
@@ -27,7 +27,8 @@ Contents:
 Only account-specific strings were replaced in the copies (user name and paths on the
 cluster, partition name, SSH alias, Overleaf project URLs); set `MATLAB_ENV_SCRIPT`,
 `MATLAB_EXE`, `REMOTE_RUN_ROOT` and the `#SBATCH --partition` line before submitting.
-Numerical code is unchanged.
+Numerical code is unchanged. The solution-panel and half-space residual plotting
+scripts were synchronized with the current manuscript on 2026-11-04.
 
 ## Reproducing Experiment 3 and Appendix A with the original code
 

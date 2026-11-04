@@ -10,6 +10,12 @@ python figures/make_all.py --data results/paper --out build/rerun
 matlab -batch "addpath('figures'); waveguide_geometry()"   # two 3D renderings
 ```
 
+The reference panels and plotting scripts follow the manuscript figures synchronized
+on 2026-11-04: solution panels show the physical domain with a lighter diverging
+colormap, and the 3D real slice is normalized by the maximum solution modulus.
+Older rewritten 3D field exports without `amplitude` need the `online` stage rerun
+before `export`.
+
 All 2D computations use one computational thread (`maxNumCompThreads(1)`), as in the
 paper.  Times below are for an Apple M4 Max; they scale with single-core speed.
 
